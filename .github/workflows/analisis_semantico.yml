@@ -2,7 +2,7 @@ name: Análisis semántico
 
 on:
   workflow_run:
-    workflows: ["Ingesta de datos financieros"]
+    workflows: ["Limpieza y transformación de datos textuales"]
     types: [completed]
   workflow_dispatch: {}  # también lanzable a mano
 
