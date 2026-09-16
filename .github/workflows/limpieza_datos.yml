@@ -1,0 +1,31 @@
+name: Limpieza y transformación de datos textuales
+
+on:
+  workflow_run:
+    workflows: ["Ingesta de datos financieros"]
+    types: [completed]
+  workflow_dispatch: {}  # también lanzable a mano
+
+jobs:
+  limpieza-datos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Solo se ejecuta si el disparo es manual, o si la ingesta financiera
+    # terminó con éxito (nunca tras un fallo del paso anterior).
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-limpieza.txt
+
+      - name: Ejecutar la limpieza y transformación
+        env:
+          GDRIVE_SERVICE_ACCOUNT_KEY: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY }}
+        run: python src/03_limpieza_transformacion_datos.py
