@@ -62,8 +62,8 @@ END_DATE = _today.isoformat()
 
 LOCAL_DIR = Path("data_raw_financiero")  # carpeta temporal del runner de GitHub Actions
 
-DRIVE_PARENT_PATH = ["TFM DATA SCIENCE", "data"]
-DRIVE_OUTPUT_FOLDER_NAME = "RAW - Datos Financieros"
+DRIVE_PARENT_PATH = ["TFM DATA SCIENCE", "03. data"]
+DRIVE_OUTPUT_FOLDER_NAME = "01. RAW - Datos Financieros"
 
 BINANCE_INTERVAL = "1d"
 BINANCE_BASE_URL = "https://data-api.binance.vision/api/v3/klines"
