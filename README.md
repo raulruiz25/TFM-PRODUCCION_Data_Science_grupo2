@@ -1,107 +1,48 @@
 # TFM-PRODUCCION
 
-Arquitectura de producción del Trabajo Fin de Máster **"Predicción de movimientos de mercado a partir del análisis semántico de comunicaciones públicas"** (Máster en Data Science, Big Data y Business Analytics, UCM, curso 2025/2026).
+Este repositorio es la parte "en producción" de mi TFM del Máster en Data Science, Big Data y Business Analytics (UCM): *Predicción de movimientos de mercado a partir del análisis semántico de comunicaciones públicas*.
 
-Este repositorio contiene tanto el pipeline automatizado (capítulo 8.2 de la memoria) como el código del agente conversacional de explicabilidad (capítulo 8.4).
+La idea es sencilla: todo el trabajo del TFM (capítulos 3 a 6) empezó como notebooks de Colab que había que ejecutar a mano cada vez. Aquí lo que hicimos fue coger esa misma lógica y automatizarla con GitHub Actions, para que el sistema completo se ejecute solo cada día sin que nadie tenga que abrir un notebook. También está el código del agente conversacional del capítulo 8.4, que es la parte con la que se puede "hablar" con los resultados del modelo.
 
-## Estructura del repositorio
+Todo funciona con herramientas gratuitas (GitHub Actions, Google Drive), así que no hace falta pagar nada ni dar de alta ninguna tarjeta en ningún sitio.
 
-```
-TFM-PRODUCCION/
-├── src/                        # Los 4 módulos de producción
-│   ├── 03_obtencion_datos_financieros.py
-│   ├── 04_analisis_semantico.py
-│   ├── 05_analisis_impacto_mercados.py
-│   └── 06_modelo_predictivo.py
-├── agente/                     # Agente conversacional de explicabilidad (Streamlit)
-│   ├── app.py
-│   ├── carga_datos.py
-│   ├── router_intencion.py
-│   ├── respuestas.py
-│   ├── simulacion.py
-│   └── requirements.txt
-├── .github/workflows/          # Un workflow por módulo de src/
-└── requirements*.txt           # Dependencias separadas por módulo
-```
-
-## Qué hace este pipeline
-
-El sistema estima diariamente la probabilidad de que ocurra un movimiento de mercado atípico en un conjunto de activos financieros (S&P 500, Nasdaq, Tesla, ETF de Energía, Bitcoin, Ethereum), combinando:
-
-- **Datos financieros** actualizados a diario (precios, volumen, volatilidad).
-- **Comunicaciones públicas** de Donald Trump, Elon Musk y la Reserva Federal, analizadas semánticamente (sentimiento, entidades, temáticas). El corpus de comunicaciones es una colección **cerrada** (sin incorporación de contenido nuevo desde diciembre de 2025 para Musk), por lo que este componente no aporta información nueva día a día aunque el módulo correspondiente sí se ejecute a diario (ver más abajo).
-
-Todo el stack funciona con tecnologías de coste cero: sin necesidad de vincular ninguna cuenta de facturación en ningún servicio.
-
-## Arquitectura
-
-- **Orquestación y cómputo:** GitHub Actions.
-- **Almacenamiento:** Google Drive (repositorio compartido de datos en bruto y procesados), accedido mediante una cuenta de servicio de Google Cloud (`tfm-ingesta-financiera@...`), cuya clave se gestiona como secreto cifrado del repositorio (`GDRIVE_SERVICE_ACCOUNT_KEY`).
-- **Modelos:** se serializan y guardan directamente en Google Drive (formato `joblib` para el modelo predictivo, formato nativo de `transformers` para el modelo de sentimiento ajustado).
-
-## Módulos de producción (`src/`)
-
-Los cuatro módulos se ejecutan **encadenados cada mañana**, uno detrás de otro, mediante disparadores `workflow_run`: cada workflow arranca solo si el anterior terminó con éxito (o si se lanza a mano con `workflow_dispatch`), de modo que ningún módulo procesa datos potencialmente incompletos.
+## Cómo está organizado
 
 ```
-Ingesta financiera (cron 06:00 UTC)
-        │  workflow_run (success)
-        ▼
-Análisis semántico
-        │  workflow_run (success)
-        ▼
-Análisis de impacto en mercados
-        │  workflow_run (success)
-        ▼
-Modelo predictivo
+src/                → los 5 scripts que se ejecutan cada día, en orden
+agente/              → la app de Streamlit del capítulo 8.4
+.github/workflows/   → un workflow de GitHub Actions por cada script de src/
 ```
 
-| # | Script | Qué hace | Modo de cálculo |
-|---|--------|----------|------------------|
-| 1 | `03_obtencion_datos_financieros.py` | Descarga precios de cierre de los 11 activos vía `yfinance`, enriquecido con datos intradía de Binance para Bitcoin y Ethereum (hora del máximo/mínimo, % de volumen en órdenes de mercado). Único disparador por `cron` (06:00 UTC); el resto de módulos se disparan por encadenamiento. | Incremental (últimos 5 días, fusiona con histórico). Modo `backfill` disponible para carga completa única. |
-| 2 | `04_analisis_semantico.py` | Aplica 4 modelos de sentimiento zero-shot (FinBERT, FinBERT-tone, twitter-RoBERTa, CryptoBERT) y el modelo twitter-RoBERTa ajustado sobre muestra etiquetada manualmente; extrae entidades (NER) y embeddings. **Se ejecuta automáticamente cada día** (encadenado tras el módulo 1), aunque al ser el corpus de texto cerrado, normalmente no encuentra comunicaciones nuevas que procesar y termina rápido. | Incremental por ID (solo procesa filas no vistas antes). El modelo ajustado se reutiliza desde Drive; el fine-tuning no se repite. |
-| 3 | `05_analisis_impacto_mercados.py` | Estudio de eventos, comparación de volatilidad/volumen antes-después de cada comunicación, correlación sentimiento-retorno, detección de anomalías con autoencoders. Genera además el dataset consolidado que alimenta el módulo 4. | Recalcula la serie completa cada vez (no incremental): los modelos estadísticos dependen del histórico completo. |
-| 4 | `06_modelo_predictivo.py` | Construye las variables predictoras, entrena el modelo final (**LightGBM**, `n_estimators=200, max_depth=5, learning_rate=0.05`, umbral de decisión 0.5), genera informes de interpretabilidad (SHAP, comparación de modelos, AUC por activo, matriz de confusión por umbral) y calcula la predicción del día para cada uno de los 6 activos con evidencia suficiente. | Reentreno completo cada día (no se cachea el modelo, a diferencia del módulo 2), para demostrar el pipeline de reentrenamiento automático de principio a fin. |
+## Qué hace cada paso, en orden
 
-> **Nota sobre el módulo 4:** el docstring del script todavía dice "Random Forest, la elección del TFM" — es un comentario desfasado de una versión anterior; el modelo que realmente se entrena y sirve como `modelo_final` en el código es LightGBM, coherente con la memoria.
+El pipeline se ejecuta como una cadena: cada paso solo arranca si el anterior ha terminado bien. Si uno falla, los siguientes no se ejecutan, para no trabajar con datos a medias.
 
-## Agente conversacional de explicabilidad (`agente/`)
+1. **Ingesta financiera** (`03_obtencion_datos_financieros.py`) — descarga los precios diarios de los activos que usamos (S&P 500, Nasdaq, Tesla, Bitcoin, Ethereum, etc.) y para Bitcoin y Ethereum añade también algún dato extra de Binance, como a qué hora del día tocó el máximo o el mínimo.
 
-Código de la app de Streamlit del capítulo 8.4, desplegada en Streamlit Community Cloud. Se estructura en:
+2. **Limpieza de datos textuales** (`03_limpieza_transformacion_datos.py`) — este es nuevo, no estaba automatizado antes. Coge los tuits de Musk, los Truths de Trump y los comunicados de la Fed en bruto, los junta en un único formato, corrige problemas de codificación de texto, quita duplicados y marca qué comunicaciones podrían tener relación con los mercados.
 
-- **`app.py`** — interfaz principal: una sola columna de chat centrada. Cada respuesta que se apoya en datos concretos lleva su propio gráfico de Plotly pegado justo debajo, dentro de la misma burbuja del historial.
-- **`carga_datos.py`** — descarga desde Drive el modelo predictivo, el modelo de sentimiento ajustado y los informes de interpretabilidad al arrancar la app.
-- **`router_intencion.py`** — clasifica cada mensaje del usuario en SIMULACIÓN (comunicado nuevo a analizar) o PREGUNTA_DATOS (consulta sobre resultados ya calculados). Deliberadamente basado en palabras clave, no en un LLM, para que funcione siempre sin depender de una API externa ni de su cuota.
-- **`simulacion.py`** — calcula el sentimiento de un comunicado nuevo (real o hipotético) y compara la probabilidad de evento importante antes/después, con las condiciones de mercado más recientes.
-- **`respuestas.py`** — redacta las respuestas finales, con la API de Gemini si está disponible o con una plantilla de respaldo construida a partir de los mismos datos.
+3. **Análisis semántico** (`04_analisis_semantico.py`) — le pasa varios modelos de sentimiento al texto (FinBERT, un modelo ajustado a mano por nosotros, etc.), saca entidades nombradas (empresas, países...) y genera embeddings.
 
-**Cambio relevante respecto a una versión anterior:** el agente incluía en su día el dashboard de Tableau Public embebido en un panel aparte. Se sustituyó por los gráficos nativos de Plotly porque el dashboard no encajaba visualmente con el resto de la app (fondo propio, tamaños fijos, barra de herramientas ajena) y porque un panel fijo no podía adaptarse a la pregunta concreta del usuario. El dashboard de Tableau sigue publicado como pieza independiente, sin enlace funcional desde la app.
+4. **Análisis de impacto en mercados** (`05_analisis_impacto_mercados.py`) — el corazón del capítulo 5: estudio de eventos, mira si hay diferencias de volatilidad y volumen antes y después de cada comunicación, correlación entre sentimiento y retorno, y detección de anomalías con autoencoders.
 
-## Almacenamiento en Google Drive
+5. **Modelo predictivo** (`06_modelo_predictivo.py`) — entrena el modelo final (LightGBM, que fue el que mejor funcionó frente a XGBoost y Random Forest) y calcula cada día la probabilidad de que pase algo importante en cada activo.
 
-Cada módulo lee y escribe en carpetas dedicadas del Drive compartido del proyecto (`TFM DATA SCIENCE`):
+Solo el primer paso tiene un cron fijo (todos los días a las 6:00 UTC); el resto se disparan automáticamente en cuanto el anterior termina bien.
 
-- `data/PROCESSED - Datos Textuales/` — corpus de comunicaciones unificado.
-- `04. Análisis semántico/` — etiquetas manuales de sentimiento congeladas.
-- `PROCESSED - Impacto Mercados/` — resultados del módulo 3.
-- `08. PROCESSED - Modelado/` — resultados del módulo 4 (`predicciones_hoy.csv`, informes de interpretabilidad, modelo serializado).
+## El agente (carpeta `agente/`)
 
-**Nota sobre cuota de almacenamiento:** las cuentas de servicio de Google Cloud no tienen cuota propia en Drive, por lo que solo pueden **actualizar** archivos ya existentes, no crear archivos nuevos. Si se despliega un módulo que escribe en una carpeta nueva de Drive por primera vez, es necesario crear manualmente (desde una cuenta de usuario con cuota) los ficheros vacíos de destino antes de la primera ejecución automatizada.
+Es la app de Streamlit desde la que se puede preguntar cosas sobre los resultados: qué predijo el modelo hoy, por qué, qué variables pesaron más, etc. Al principio la idea era meter el dashboard de Tableau dentro de la propia app, pero al final no encajaba bien visualmente y no se adaptaba a lo que preguntara cada usuario, así que ahora el agente genera sus propios gráficos con Plotly y el dashboard de Tableau se quedó como algo aparte, sin conexión entre los dos.
 
-## Requisitos para ejecutar o desplegar
+## Dónde se guardan los datos
 
-- Python (ver el `requirements*.txt` correspondiente a cada módulo/carpeta).
-- Credenciales de la cuenta de servicio de Google Cloud con acceso a la API de Drive, configuradas como secreto de GitHub Actions (`GDRIVE_SERVICE_ACCOUNT_KEY`).
-- Acceso de lectura al Drive compartido `TFM DATA SCIENCE`.
-- Para el agente: clave de la API de Gemini (opcional; si no está disponible, usa plantilla de respaldo).
+Todo se guarda en una carpeta de Google Drive compartida del equipo (`TFM DATA SCIENCE`), organizada por carpetas numeradas según el orden del pipeline (01. RAW - Datos Financieros, 02. RAW - Datos Textuales, y así hasta 08. PROCESSED - Modelado).
 
-## Relación con el resto del TFM
+El acceso lo hace una cuenta de servicio de Google Cloud, cuya clave está guardada como secreto en GitHub (no en el código). Una cosa a tener en cuenta: este tipo de cuentas no tiene cuota propia de almacenamiento en Drive, así que solo puede actualizar ficheros que ya existen, no crear carpetas o ficheros nuevos desde cero. Si en algún momento cambiáis de sitio alguna carpeta de salida, hay que crear a mano (desde una cuenta normal) los ficheros vacíos de destino antes de que corra el script, si no falla con un error de cuota.
 
-- El **dashboard de Tableau Public** (capítulo 7 de la memoria) no se conecta en vivo a este pipeline: se alimenta de CSV exportados y republicados manualmente cuando se quiere reflejar una nueva ejecución, y funciona como pieza totalmente independiente del agente (capítulo 8.6).
-- El **agente conversacional de explicabilidad** (capítulo 8.4), desplegado por separado en Streamlit Community Cloud, sí consume directamente los resultados que este pipeline deja en Drive.
+## Cosas a tener en cuenta
 
-## Limitaciones conocidas
-
-- El análisis semántico no incorpora comunicaciones nuevas desde diciembre de 2025 (Musk) por ser un corpus cerrado; la predicción diaria del módulo 4 está por tanto dominada por el componente financiero.
-- GitHub Actions no ofrece GPU en su capa gratuita: el ajuste fino y la inferencia de los modelos de sentimiento corren sobre CPU.
-- GitHub deshabilita automáticamente los workflows programados por cron tras 60 días de inactividad en el repositorio.
+- El corpus de comunicaciones es cerrado: no se están metiendo tuits o comunicados nuevos día a día (salvo que alguien vuelva a ejecutar la ingesta a mano). Por eso la predicción diaria depende sobre todo de cómo se mueve el mercado ese día, no tanto del texto.
+- El dashboard de Tableau Public no está conectado en vivo al pipeline: cuando queremos que refleje una ejecución nueva, hay que bajar el CSV actualizado y volver a publicar el workbook a mano.
+- GitHub Actions no da GPU gratis, así que el modelo de sentimiento se entrena y se usa en CPU.
+- Si el repositorio está más de 60 días sin actividad, GitHub desactiva solo los workflows programados por cron.
