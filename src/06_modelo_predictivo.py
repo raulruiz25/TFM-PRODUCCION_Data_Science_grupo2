@@ -3,8 +3,8 @@ Desarrollo del modelo predictivo (TFM - sección 8.2, capítulo 6 del índice)
 Derivado de 06__Desarrollo_de_modelo_predictivo.ipynb
 
 Construye las variables predictoras a partir de la salida del módulo 3
-(dataset_consolidado_05.csv), entrena el modelo final (Random Forest, la
-elección del TFM tras comparar contra XGBoost/LightGBM/LogisticRegression y
+(dataset_consolidado_05.csv), entrena el modelo final (LightGBM, la
+elección del TFM tras comparar contra XGBoost/Random Forest/LogisticRegression y
 descartar LSTM y la arquitectura multimodal por bajo rendimiento), genera los
 informes de evaluación e interpretabilidad (SHAP, contribución por familia de
 variables, AUC por activo), serializa el modelo y calcula la predicción del
@@ -43,10 +43,10 @@ from xgboost import XGBClassifier
 LOCAL_DIR = Path("data_modelado")
 LOCAL_DIR.mkdir(parents=True, exist_ok=True)
 
-DRIVE_INPUT_PATH = ["TFM DATA SCIENCE", "data", "PROCESSED - Impacto Mercados"]
+DRIVE_INPUT_PATH = ["TFM DATA SCIENCE", "03. data", "07. PROCESSED - Impacto Mercados"]
 INPUT_FILENAME = "dataset_consolidado_05.csv"
 
-DRIVE_OUTPUT_PATH = ["TFM DATA SCIENCE", "data", "PROCESSED - Modelado"]
+DRIVE_OUTPUT_PATH = ["TFM DATA SCIENCE", "03. data", "08. PROCESSED - Modelado"]
 DATASET_MODELADO_FILENAME = "dataset_modelado.csv"
 MODELO_FILENAME = "modelo_evento_importante.pkl"
 PREDICCIONES_FILENAME = "predicciones_hoy.csv"
