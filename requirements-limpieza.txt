@@ -1,0 +1,6 @@
+pandas
+numpy
+ftfy
+langdetect
+google-api-python-client
+google-auth
