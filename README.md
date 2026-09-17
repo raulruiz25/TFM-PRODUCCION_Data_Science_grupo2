@@ -1,4 +1,4 @@
-# TFM-PRODUCCION
+# Predicción de movimientos de mercado a partir del análisis semántico de comunicaciones públicas
 
 Este repositorio recoge la puesta en producción del Trabajo Fin de Máster *Predicción de movimientos de mercado a partir del análisis semántico de comunicaciones públicas*, del Máster en Data Science, Big Data y Business Analytics (Universidad Complutense de Madrid).
 
