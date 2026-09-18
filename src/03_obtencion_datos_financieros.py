@@ -62,7 +62,7 @@ END_DATE = _today.isoformat()
 
 LOCAL_DIR = Path("data_raw_financiero")  # carpeta temporal del runner de GitHub Actions
 
-DRIVE_PARENT_PATH = ["TFM DATA SCIENCE", "03. data"]
+DRIVE_PARENT_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data"]
 DRIVE_OUTPUT_FOLDER_NAME = "01. RAW - Datos Financieros"
 
 BINANCE_INTERVAL = "1d"

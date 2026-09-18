@@ -43,10 +43,10 @@ from xgboost import XGBClassifier
 LOCAL_DIR = Path("data_modelado")
 LOCAL_DIR.mkdir(parents=True, exist_ok=True)
 
-DRIVE_INPUT_PATH = ["TFM DATA SCIENCE", "03. data", "07. PROCESSED - Impacto Mercados"]
+DRIVE_INPUT_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "07. PROCESSED - Impacto Mercados"]
 INPUT_FILENAME = "dataset_consolidado_05.csv"
 
-DRIVE_OUTPUT_PATH = ["TFM DATA SCIENCE", "03. data", "08. PROCESSED - Modelado"]
+DRIVE_OUTPUT_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "08. PROCESSED - Modelado"]
 DATASET_MODELADO_FILENAME = "dataset_modelado.csv"
 MODELO_FILENAME = "modelo_evento_importante.pkl"
 PREDICCIONES_FILENAME = "predicciones_hoy.csv"

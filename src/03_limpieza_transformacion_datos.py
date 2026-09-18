@@ -48,8 +48,8 @@ NOMBRE_MUSK_EXTRA = "elonmusk_tweets_2025-11-02T01-12-31-543Z.json"
 NOMBRE_TRUMP = "Trump_truth_archive.csv"
 NOMBRE_FED = "fed_statements.csv"
 
-DRIVE_INPUT_PATH = ["TFM DATA SCIENCE", "03. data", "02. RAW - Datos Textuales"]
-DRIVE_OUTPUT_PATH = ["TFM DATA SCIENCE", "03. data", "04. PROCESSED - Datos Textuales"]
+DRIVE_INPUT_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "02. RAW - Datos Textuales"]
+DRIVE_OUTPUT_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "04. PROCESSED - Datos Textuales"]
 OUTPUT_FILENAME = "dataset_unificado.csv"
 
 FINAL_COLUMNS = [

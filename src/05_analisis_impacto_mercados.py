@@ -51,9 +51,9 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 LOCAL_DIR = Path("data_impacto")
 LOCAL_DIR.mkdir(parents=True, exist_ok=True)
 
-DRIVE_FINANCIERO_PATH = ["TFM DATA SCIENCE", "03. data", "01. RAW - Datos Financieros"]
-DRIVE_SEMANTICO_PATH = ["TFM DATA SCIENCE", "03. data", "05. PROCESSED - Analisis Semantico"]
-DRIVE_OUTPUT_PATH = ["TFM DATA SCIENCE", "03. data", "07. PROCESSED - Impacto Mercados"]
+DRIVE_FINANCIERO_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "01. RAW - Datos Financieros"]
+DRIVE_SEMANTICO_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "05. PROCESSED - Analisis Semantico"]
+DRIVE_OUTPUT_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "07. PROCESSED - Impacto Mercados"]
 
 SEMANTICO_FILENAME = "dataset_semantico.csv"
 OUTPUT_FILENAME = "dataset_consolidado_05.csv"

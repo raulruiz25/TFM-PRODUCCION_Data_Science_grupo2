@@ -49,18 +49,18 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 LOCAL_DIR = Path("data_semantico")
 LOCAL_DIR.mkdir(parents=True, exist_ok=True)
 
-DRIVE_INPUT_PATH = ["TFM DATA SCIENCE", "03. data", "04. PROCESSED - Datos Textuales"]
+DRIVE_INPUT_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "04. PROCESSED - Datos Textuales"]
 INPUT_FILENAME = "dataset_unificado.csv"
 
-DRIVE_LABELED_PATH = ["TFM DATA SCIENCE", "03. data", "03. LABELS - Etiquetado de sentimiento"]
+DRIVE_LABELED_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "03. LABELS - Etiquetado de sentimiento"]
 LABELED_FILENAME = "TFM_etiquetado_manual_sentimiento.xlsx"
 
-DRIVE_OUTPUT_PATH = ["TFM DATA SCIENCE", "03. data", "05. PROCESSED - Analisis Semantico"]
+DRIVE_OUTPUT_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "05. PROCESSED - Analisis Semantico"]
 OUTPUT_FILENAME = "dataset_semantico.csv"
 EMBEDDINGS_FILENAME = "text_embeddings.npy"
 EMBEDDINGS_INDEX_FILENAME = "text_embeddings_index.csv"
 
-DRIVE_MODEL_PATH = ["TFM DATA SCIENCE", "03. data", "06. MODELS - Analisis Semantico"]
+DRIVE_MODEL_PATH = ["Grupo 2_Predicción_Movimientos_Mercado_&_Comunicaciones_Públicas", "03. data", "06. MODELS - Analisis Semantico"]
 MODEL_ZIP_FILENAME = "modelo_sentimiento_finetuned.zip"
 
 MODELO_BASE_FINETUNE = "cardiffnlp/twitter-roberta-base-sentiment-latest"
